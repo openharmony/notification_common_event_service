@@ -42,6 +42,9 @@ ohos_moduletest("common_event_command_dump_module_test") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
+  if (build_variant == "root") {
+    defines = [ "CEM_SUPPORT_DUMP" ]
+  }
 
   deps = [
     "${ces_core_path}:cesfwk_core",
