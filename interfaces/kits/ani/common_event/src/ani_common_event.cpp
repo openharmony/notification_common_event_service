@@ -405,7 +405,6 @@ void SubscriberInstance::OnReceiveEvent(const CommonEventData& data)
         EVENT_LOGE(LOG_TAG_CES_ANI, "GetEnv error. result: %{public}d.", aniResult);
         return;
     }
-
     ani_object ani_data {};
     AniCommonEventUtils::ConvertCommonEventDataToEts(etsEnv, ani_data, data);
 
@@ -415,7 +414,7 @@ void SubscriberInstance::OnReceiveEvent(const CommonEventData& data)
         EVENT_LOGE(LOG_TAG_CES_ANI, "GetNull error. result: %{public}d.", aniResult);
     }
 
-    auto fnObject = reinterpret_cast<ani_fn_object>(reinterpret_cast<ani_ref>(callback_));
+    auto fnObject = reinterpret_cast<ani_fn_object>(static_cast<ani_ref>(callback_));
     if (fnObject == nullptr) {
         EVENT_LOGE(LOG_TAG_CES_ANI, "fnObject is null.");
         return;
@@ -539,7 +538,6 @@ static ani_ref transferToStaticSubscriber(ani_env *env, [[maybe_unused]] ani_cla
     }
     SetNapiSubscriberCallback(napiSubscriber);
     auto asyncCommonEventResult = EventManagerFwkNapi::GetAsyncCommonEventResult(napiSubscriber);
-
     auto relation = GetTransferRelation(nullptr, napiSubscriber);
     if (relation != nullptr) {
         relation->aniSubscribers_.push_back(aniWrapper->GetSubscriber());

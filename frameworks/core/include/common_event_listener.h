@@ -69,7 +69,6 @@ public:
 
 private:
     std::mutex mutex_;
-    std::mutex subscriberMutex_;
     std::shared_ptr<CommonEventSubscriber> commonEventSubscriber_;
     std::shared_ptr<EventRunner> runner_;
     std::shared_ptr<EventHandler> handler_;
