@@ -23,21 +23,10 @@
 
 #include "common_event_support.h"
 #include "event_log_wrapper.h"
-#include "access_token_helper.h"
 
 namespace OHOS {
 namespace EventFwk {
 constexpr size_t REVERSE = 3;
-
-constexpr int32_t PHONE_UID = 1001;
-constexpr int32_t WIFI_UID = 1010;
-constexpr int32_t CONNECT_UID = 1099;
-constexpr int32_t BOOT_UID = 1101;
-constexpr int32_t TIME_UID = 3013;
-constexpr int32_t ACCOUNT_UID = 3058;
-constexpr int32_t TIME_TICK_UID = 3819;
-constexpr int32_t BMS_UID = 5523;
-constexpr int32_t POWER_UID = 5528;
 
 static const std::unordered_map<std::string, std::pair<PermissionState, std::vector<std::string>>> COMMON_EVENT_MAP {
     {CommonEventSupport::COMMON_EVENT_BOOT_COMPLETED,
@@ -57,7 +46,7 @@ static const std::unordered_map<std::string, std::pair<PermissionState, std::vec
         {PermissionState::DEFAULT, {"ohos.permission.INTERACT_ACROSS_LOCAL_ACCOUNTS"}}
     },
     {CommonEventSupport::COMMON_EVENT_WIFI_SCAN_FINISHED,
-        {PermissionState::DEFAULT, {"ohos.permission.GET_WIFI_PEERS_MAC"}}
+        {PermissionState::DEFAULT, {"ohos.permission.LOCATION"}}
     },
     {CommonEventSupport::COMMON_EVENT_WIFI_RSSI_VALUE,
         {PermissionState::DEFAULT, {"ohos.permission.GET_WIFI_INFO"}}
@@ -72,7 +61,7 @@ static const std::unordered_map<std::string, std::pair<PermissionState, std::vec
         {PermissionState::DEFAULT, {"ohos.permission.MPLINK_CHANGE_STATE"}}
     },
     {CommonEventSupport::COMMON_EVENT_WIFI_P2P_CONN_STATE,
-        {PermissionState::AND, {"ohos.permission.GET_WIFI_INFO", "ohos.permission.GET_WIFI_PEERS_MAC"}}
+        {PermissionState::AND, {"ohos.permission.GET_WIFI_INFO", "ohos.permission.LOCATION"}}
     },
     {CommonEventSupport::COMMON_EVENT_WIFI_P2P_STATE_CHANGED,
         {PermissionState::DEFAULT, {"ohos.permission.GET_WIFI_INFO"}}
@@ -203,12 +192,12 @@ static const std::unordered_set<std::string> SYSTEM_API_COMMON_EVENTS {
     CommonEventSupport::COMMON_EVENT_TRUSTED_RING_CHECKIN,
     CommonEventSupport::COMMON_EVENT_TRUSTED_RING_CHECKOUT,
     CommonEventSupport::COMMON_EVENT_TRUSTED_RING_RESET,
-    CommonEventSupport::COMMON_EVENT_USER_LOCKING,
-    CommonEventSupport::COMMON_EVENT_USER_LOCKED,
     CommonEventSupport::COMMON_EVENT_CUSTOM_CONFIG_POLICY_UPDATED,
     CommonEventSupport::COMMON_EVENT_CUSTOM_ROAMING_REGION_UPDATED,
-    CommonEventSupport::COMMON_EVENT_SCREEN_SHARE,
+    CommonEventSupport::COMMON_EVENT_USER_LOCKING,
+    CommonEventSupport::COMMON_EVENT_USER_LOCKED,
     CommonEventSupport::COMMON_EVENT_BUNDLE_SCAN_FINISHED,
+    CommonEventSupport::COMMON_EVENT_SCREEN_SHARE,
     CommonEventSupport::COMMON_EVENT_CLOUD_DISK_STATE_CHANGED
 };
 
