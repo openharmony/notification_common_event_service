@@ -21,7 +21,6 @@
 #include <vector>
 
 #include "singleton.h"
-#include "access_token_helper.h"
 
 namespace OHOS {
 namespace EventFwk {
