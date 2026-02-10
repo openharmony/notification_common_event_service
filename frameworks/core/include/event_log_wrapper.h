@@ -53,8 +53,7 @@ do {                                                                            
         uint32_t supressedCnt = supressed;                                              \
         supressed = 0;                                                                  \
         if (supressedCnt != 0) {                                                        \
-            ((void)HILOG_IMPL((type), (level), EVENT_LOG_DOMAIN, tag,                   \
-                "log suppressed cnt %{public}u", supressedCnt));                        \
+            EVENT_LOGI(tag, "log suppressed cnt %{public}u", supressedCnt);                  \
         }                                                                               \
         (canPrint) = true;                                                              \
     } else {                                                                            \
