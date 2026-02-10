@@ -34,8 +34,8 @@
 #include "ipc_skeleton.h"
 #include "os_account_manager_helper.h"
 #include "static_subscriber_data_manager.h"
-#include "string_wrapper.h"
 #include "parameters.h"
+#include "string_wrapper.h"
 
 namespace OHOS {
 namespace EventFwk {
