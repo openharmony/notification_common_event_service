@@ -148,10 +148,11 @@ BENCHMARK_F(BenchmarkCommonEventManagerService, CommonEventUnsubscribeTestCase)(
     CommonEventSubscribeInfo subscribeInfo(matchingSkills);
     auto subscriberPtr = std::make_shared<CommonEventSubscriberBenchmark>(subscribeInfo);
     OHOS::sptr<CommonEventListener> commonEventListener = new CommonEventListener(subscriberPtr);
+    int32_t funcRet = -1;
 
     while (state.KeepRunning()) {
         bool result = commonEventManagerService_->UnsubscribeCommonEvent(
-            commonEventListener);
+            commonEventListener, funcRet);
         if (!result) {
             state.SkipWithError("UnsubscribeCommonEvent failed.");
         }
@@ -179,10 +180,11 @@ BENCHMARK_F(BenchmarkCommonEventManagerService, CommonEventPublishTestCase)(benc
     CommonEventSubscribeInfo subscribeInfo(matchingSkills);
     auto subscriberPtr = std::make_shared<CommonEventSubscriberBenchmark>(subscribeInfo);
     OHOS::sptr<CommonEventListener> commonEventListener = new CommonEventListener(subscriberPtr);
+    int32_t funcRet = -1;
 
     while (state.KeepRunning()) {
         bool result = commonEventManagerService_->PublishCommonEvent(
-            commonEventData, publishInfo, commonEventListener, UNDEFINED_USER);
+            commonEventData, publishInfo, commonEventListener, UNDEFINED_USER, funcRet);
         if (!result) {
             state.SkipWithError("PublishCommonEvent failed.");
         }
