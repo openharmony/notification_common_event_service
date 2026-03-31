@@ -177,6 +177,9 @@ static const std::unordered_map<std::string, std::pair<PermissionState, std::vec
     {CommonEventSupport::COMMON_EVENT_CLOUD_DISK_STATE_CHANGED,
         {PermissionState::DEFAULT, {"ohos.permission.ACCESS_CLOUD_DISK_INFO"}}
     },
+    {CommonEventSupport::COMMON_EVENT_VOLUME_ENCRYPTION_POLICY_SET,
+        {PermissionState::DEFAULT, {"ohos.permission.QUERY_VOLUME_ENCRYPTION_STATUS"}}
+    },
 };
 
 static const std::unordered_set<std::string> SYSTEM_API_COMMON_EVENTS {
