@@ -1697,6 +1697,27 @@ const std::string CommonEventSupport::COMMON_EVENT_TABLET_MODE_CHANGED = "usual.
  */
 const std::string CommonEventSupport::COMMON_EVENT_LID_STATE_CHANGED = "usual.event.LID_STATE_CHANGED";
 
+/**
+ * Indicates that specific volumes on the device have been decrypted.
+ * This is a protected common event that can only be sent by system.
+ */
+const std::string CommonEventSupport::COMMON_EVENT_VOLUME_DECRYPTED = "usual.event.VOLUME_DECRYPTED";
+
+/**
+ * Indicates that specific volumes on the device have been encrypted.
+ * This is a protected common event that can only be sent by system.
+ */
+const std::string CommonEventSupport::COMMON_EVENT_VOLUME_ENCRYPTED = "usual.event.VOLUME_ENCRYPTED";
+
+/**
+ * Indicates that specific volumes on the device have had their encryption policy set.
+ * To subscribe to this common event, your application must have the ohos.permission.QUERY_VOLUME_ENCRYPTION_STATUS
+ * permission.
+ * This is a protected common event that can only be sent by system.
+ */
+const std::string CommonEventSupport::COMMON_EVENT_VOLUME_ENCRYPTION_POLICY_SET =
+    "usual.event.VOLUME_ENCRYPTION_POLICY_SET";
+
 CommonEventSupport::CommonEventSupport()
 {
     Init();
@@ -3222,6 +3243,26 @@ void CommonEventSupport::Init()
      * This is a protected common event that can only be sent by system.
      */
     commonEventSupport_.emplace_back(CommonEventSupport::COMMON_EVENT_LID_STATE_CHANGED);
+
+    /**
+    * Indicates that specific volumes on the device have been decrypted.
+    * This is a protected common event that can only be sent by system.
+    */
+    commonEventSupport_.emplace_back(COMMON_EVENT_VOLUME_DECRYPTED);
+
+    /**
+    * Indicates that specific volumes on the device have been encrypted.
+    * This is a protected common event that can only be sent by system.
+    */
+    commonEventSupport_.emplace_back(COMMON_EVENT_VOLUME_ENCRYPTED);
+
+    /**
+    * Indicates that specific volumes on the device have had their encryption policy set.
+    * To subscribe to this common event, your application must have the ohos.permission.QUERY_VOLUME_ENCRYPTION_STATUS
+    * permission.
+    * This is a protected common event that can only be sent by system.
+    */
+    commonEventSupport_.emplace_back(COMMON_EVENT_VOLUME_ENCRYPTION_POLICY_SET);
     return;
 }
 
