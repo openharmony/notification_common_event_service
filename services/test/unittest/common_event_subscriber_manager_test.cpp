@@ -30,6 +30,7 @@ using namespace testing::ext;
 using namespace OHOS;
 using namespace OHOS::EventFwk;
 using namespace OHOS::AppExecFwk;
+extern void SetTargetVersionByUidMock(int32_t version, bool result);
 namespace OHOS {
 namespace EventFwk {
 
@@ -1536,6 +1537,76 @@ HWTEST_F(CommonEventSubscriberManagerTest, CheckSubscriberWhetherMatched_Publish
     EXPECT_FALSE(result);
 }
 
+HWTEST_F(CommonEventSubscriberManagerTest, CheckSubscriberWhetherMatched_VersionNotMatched, Level0)
+{
+    // Arrange
+    std::shared_ptr<CommonEventSubscriberManager> manager = std::make_shared<CommonEventSubscriberManager>();
+    std::shared_ptr<CommonEventPublishInfo> publishInfo = std::make_shared<CommonEventPublishInfo>();
+    CommonEventRecord eventRecord;
+    publishInfo->SetBundleName("bundleName1");
+    publishInfo->SetSubscriberType(SubscriberType::SYSTEM_SUBSCRIBER_TYPE);
+    publishInfo->SetSubscriberUid({1});
+    publishInfo->SetSubscriberMaximumVersion(1);
+    publishInfo->SetValidationRule(ValidationRule::AND);
+    eventRecord.publishInfo = publishInfo;
+    eventRecord.eventRecordInfo.uid = 1;
+
+    SubscriberRecordPtr subscriberRecord = std::make_shared<EventSubscriberRecord>();
+    EventRecordInfo eventRecordInfo;
+    eventRecordInfo.bundleName = "bundleName1";
+    eventRecordInfo.isSystemApp = true;
+    eventRecordInfo.uid = 1;
+    subscriberRecord->eventRecordInfo = eventRecordInfo;
+    std::shared_ptr<CommonEventData> commonEventData = std::make_shared<CommonEventData>();
+    OHOS::AAFwk::Want want;
+    want.SetAction("usual.event.BOOT_COMPLETED");
+    commonEventData->SetWant(want);
+    eventRecord.commonEventData = commonEventData;
+    MockIsVerfyPermisson(true);
+    SetTargetVersionByUidMock(999, true);
+
+    // Act
+    bool result = manager->CheckSubscriberWhetherMatched(subscriberRecord, eventRecord);
+
+    // Assert
+    EXPECT_FALSE(result);
+}
+
+HWTEST_F(CommonEventSubscriberManagerTest, CheckSubscriberWhetherMatched_VersionMatched, Level0)
+{
+    // Arrange
+    std::shared_ptr<CommonEventSubscriberManager> manager = std::make_shared<CommonEventSubscriberManager>();
+    std::shared_ptr<CommonEventPublishInfo> publishInfo = std::make_shared<CommonEventPublishInfo>();
+    CommonEventRecord eventRecord;
+    publishInfo->SetBundleName("bundleName1");
+    publishInfo->SetSubscriberType(SubscriberType::SYSTEM_SUBSCRIBER_TYPE);
+    publishInfo->SetSubscriberUid({1});
+    publishInfo->SetSubscriberMaximumVersion(999);
+    publishInfo->SetValidationRule(ValidationRule::AND);
+    eventRecord.publishInfo = publishInfo;
+    eventRecord.eventRecordInfo.uid = 1;
+
+    SubscriberRecordPtr subscriberRecord = std::make_shared<EventSubscriberRecord>();
+    EventRecordInfo eventRecordInfo;
+    eventRecordInfo.bundleName = "bundleName1";
+    eventRecordInfo.isSystemApp = true;
+    eventRecordInfo.uid = 1;
+    subscriberRecord->eventRecordInfo = eventRecordInfo;
+    std::shared_ptr<CommonEventData> commonEventData = std::make_shared<CommonEventData>();
+    OHOS::AAFwk::Want want;
+    want.SetAction("usual.event.BOOT_COMPLETED");
+    commonEventData->SetWant(want);
+    eventRecord.commonEventData = commonEventData;
+    MockIsVerfyPermisson(true);
+    SetTargetVersionByUidMock(1, true);
+
+    // Act
+    bool result = manager->CheckSubscriberWhetherMatched(subscriberRecord, eventRecord);
+
+    // Assert
+    EXPECT_TRUE(result);
+}
+
 HWTEST_F(CommonEventSubscriberManagerTest, CheckSubscriberWhetherMatched_AllConditionsMatched, Level0)
 {
     // Arrange
@@ -1831,6 +1902,91 @@ HWTEST_F(CommonEventSubscriberManagerTest, CheckWhetherIsAppIndexSubscribed_Bund
 
     // Act
     bool result = manager->CheckWhetherIsAppIndexSubscribed(subscriberRecord, eventRecord);
+
+    // Assert
+    EXPECT_TRUE(result);
+}
+
+HWTEST_F(CommonEventSubscriberManagerTest, CheckSubscriberByMaximumVersion_001, Level0)
+{
+    // Arrange
+    std::shared_ptr<CommonEventSubscriberManager> manager = std::make_shared<CommonEventSubscriberManager>();
+    std::shared_ptr<EventSubscriberRecord> subscriberRecord = std::make_shared<EventSubscriberRecord>();
+    std::shared_ptr<CommonEventPublishInfo> publishInfo = std::make_shared<CommonEventPublishInfo>();
+
+    CommonEventRecord eventRecord;
+    int32_t maximumVersion = -1;
+    publishInfo->SetSubscriberMaximumVersion(maximumVersion);
+    eventRecord.publishInfo = publishInfo;
+
+    // Act
+    bool result = manager->CheckSubscriberByMaximumVersion(subscriberRecord, eventRecord);
+
+    // Assert
+    EXPECT_FALSE(result);
+}
+
+HWTEST_F(CommonEventSubscriberManagerTest, CheckSubscriberByMaximumVersion_002, Level0)
+{
+    // Arrange
+    std::shared_ptr<CommonEventSubscriberManager> manager = std::make_shared<CommonEventSubscriberManager>();
+    std::shared_ptr<EventSubscriberRecord> subscriberRecord = std::make_shared<EventSubscriberRecord>();
+    std::shared_ptr<CommonEventPublishInfo> publishInfo = std::make_shared<CommonEventPublishInfo>();
+    uid_t uids = -1;
+    subscriberRecord->eventRecordInfo.uid = uids;
+
+    CommonEventRecord eventRecord;
+    int32_t maximumVersion = 999;
+    publishInfo->SetSubscriberMaximumVersion(maximumVersion);
+    eventRecord.publishInfo = publishInfo;
+    SetTargetVersionByUidMock(maximumVersion, false);
+
+    // Act
+    bool result = manager->CheckSubscriberByMaximumVersion(subscriberRecord, eventRecord);
+
+    // Assert
+    EXPECT_TRUE(result);
+}
+
+HWTEST_F(CommonEventSubscriberManagerTest, CheckSubscriberByMaximumVersion_003, Level0)
+{
+    // Arrange
+    std::shared_ptr<CommonEventSubscriberManager> manager = std::make_shared<CommonEventSubscriberManager>();
+    std::shared_ptr<EventSubscriberRecord> subscriberRecord = std::make_shared<EventSubscriberRecord>();
+    std::shared_ptr<CommonEventPublishInfo> publishInfo = std::make_shared<CommonEventPublishInfo>();
+    uid_t uids = -1;
+    subscriberRecord->eventRecordInfo.uid = uids;
+
+    CommonEventRecord eventRecord;
+    int32_t maximumVersion = 1;
+    publishInfo->SetSubscriberMaximumVersion(maximumVersion);
+    eventRecord.publishInfo = publishInfo;
+    SetTargetVersionByUidMock(999, true);
+
+    // Act
+    bool result = manager->CheckSubscriberByMaximumVersion(subscriberRecord, eventRecord);
+
+    // Assert
+    EXPECT_FALSE(result);
+}
+
+HWTEST_F(CommonEventSubscriberManagerTest, CheckSubscriberByMaximumVersion_004, Level0)
+{
+    // Arrange
+    std::shared_ptr<CommonEventSubscriberManager> manager = std::make_shared<CommonEventSubscriberManager>();
+    std::shared_ptr<EventSubscriberRecord> subscriberRecord = std::make_shared<EventSubscriberRecord>();
+    std::shared_ptr<CommonEventPublishInfo> publishInfo = std::make_shared<CommonEventPublishInfo>();
+
+    uid_t uids = -1;
+    subscriberRecord->eventRecordInfo.uid = uids;
+    CommonEventRecord eventRecord;
+    int32_t maximumVersion = 999;
+    publishInfo->SetSubscriberMaximumVersion(maximumVersion);
+    eventRecord.publishInfo = publishInfo;
+    SetTargetVersionByUidMock(1, true);
+
+    // Act
+    bool result = manager->CheckSubscriberByMaximumVersion(subscriberRecord, eventRecord);
 
     // Assert
     EXPECT_TRUE(result);

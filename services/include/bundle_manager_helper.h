@@ -103,6 +103,8 @@ public:
 
     int32_t GetDefaultUidByBundleName(const std::string &bundle, const int32_t userId);
 
+    bool GetApiTargetVersionByUid(const uid_t uid, int32_t &apiTargetVersion);
+
 private:
     bool GetBundleMgrProxy();
     bool GetBundleMgrProxyAsync();

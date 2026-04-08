@@ -30,6 +30,7 @@
 #include "hitrace_meter_adapter.h"
 #include "parameter.h"
 #include "subscriber_death_recipient.h"
+#include "bundle_manager_helper.h"
 #ifdef WATCH_CUSTOMIZED_SCREEN_EVENT_TO_OTHER_APP
 #include <dlfcn.h>
 #endif
@@ -465,6 +466,26 @@ bool CommonEventSubscriberManager::CheckSubscriberBySpecifiedType(
         (specifiedSubscriberType == static_cast<int32_t>(SubscriberType::SYSTEM_SUBSCRIBER_TYPE) && isSystemApp);
 }
 
+bool CommonEventSubscriberManager::CheckSubscriberByMaximumVersion(const SubscriberRecordPtr &subscriberRecord,
+    const CommonEventRecord &eventRecord)
+{
+    int32_t maximumVersion = eventRecord.publishInfo->GetSubscriberMaximumVersion();
+    if (maximumVersion == DEFAULT_VERSION) {
+        return false;
+    }
+    int32_t subscriberUid = subscriberRecord->eventRecordInfo.uid;
+    int32_t subscriberVersion = -1;
+    if (!DelayedSingleton<BundleManagerHelper>::GetInstance()->GetApiTargetVersionByUid(
+        subscriberUid, subscriberVersion)) {
+        EVENT_LOGE(LOG_TAG_SUBSCRIBER, "GetApiTargetVersionByUid failed.");
+        return true;
+    }
+    if (subscriberVersion % 1000 > maximumVersion) {
+        return false;
+    }
+    return true;
+}
+
 void CommonEventSubscriberManager::GetSubscriberRecordsByWantLocked(const CommonEventRecord &eventRecord,
     std::vector<SubscriberRecordPtr> &records)
 {
@@ -578,6 +599,9 @@ bool CommonEventSubscriberManager::CheckSubscriberWhetherMatched(
     if (!publisherRequiredPermissions.empty() &&
         CheckPublisherRequiredPermissions(subscriberRecord, eventRecord)) {
         checkResult |= SUBSCRIBER_FILTER_PERMISSION_INDEX;
+    }
+    if (CheckSubscriberByMaximumVersion(subscriberRecord, eventRecord)) {
+        checkResult |= SUBSCRIBER_FILTER_VERSION;
     }
     bool result = false;
     if (eventRecord.publishInfo->GetValidationRule() == ValidationRule::AND) {

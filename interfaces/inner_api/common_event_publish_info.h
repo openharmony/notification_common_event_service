@@ -35,6 +35,7 @@ static constexpr uint16_t SUBSCRIBER_FILTER_BUNDLE_INDEX = 1 << 0;
 static constexpr uint16_t SUBSCRIBER_FILTER_PERMISSION_INDEX = 1 << 1;
 static constexpr uint16_t SUBSCRIBER_FILTER_SUBSCRIBER_TYPE_INDEX = 1 << 2;
 static constexpr uint16_t SUBSCRIBER_FILTER_SUBSCRIBER_UID_INDEX = 1 << 3;
+static constexpr uint16_t SUBSCRIBER_FILTER_VERSION = 1 << 4;
 static constexpr int32_t UNINITIALIZATED_SUBSCRIBER_TYPE = -1;
 
 class CommonEventPublishInfo : public Parcelable {
@@ -156,11 +157,26 @@ public:
     ValidationRule GetValidationRule() const;
 
     /**
+     * Set a version. Subscribers whose version is later than this version cannot receive common event.
+     *
+     * @param version version number.
+     */
+    void SetSubscriberMaximumVersion(const int32_t version);
+
+    /**
+     * Obtains the version of a common event
+     *
+     * @return Returns the version of a common event.
+     */
+    int32_t GetSubscriberMaximumVersion() const;
+
+    /**
      * Obtains the settings of filter parameters
      *  SUBSCRIBER_FILTER_BUNDLE_INDEX = 1 << 0;
      *  SUBSCRIBER_FILTER_PERMISSION_INDEX = 1 << 1;
      *  SUBSCRIBER_FILTER_SUBSCRIBER_TYPE_INDEX = 1 << 2;
      *  SUBSCRIBER_FILTER_SUBSCRIBER_UID_INDEX = 1 << 3;
+     *  SUBSCRIBER_FILTER_VERSION = 1 << 4;
      *
      * @return Returns the bits of filter settings.
      */
@@ -199,6 +215,7 @@ private:
     std::vector<int32_t> subscriberUids_;
     int32_t subscriberType_;
     ValidationRule rule_;
+    int32_t maximumVersion_ = -1;
 };
 }  // namespace EventFwk
 }  // namespace OHOS
