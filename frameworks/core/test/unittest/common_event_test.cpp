@@ -506,6 +506,27 @@ HWTEST_F(CommonEventTest, CommonEventPublishInfo_0300, Function | MediumTest | L
 }
 
 /*
+ * @tc.number: CommonEventPublishInfo_0400
+ * @tc.name: verify SetSubscriberMaximumVersion
+ * @tc.desc: Invoke SetSubscriberMaximumVersion interface verify whether it is 24
+ */
+HWTEST_F(CommonEventTest, CommonEventPublishInfo_0400, Function | MediumTest | Level0)
+{
+    int32_t version = 24;
+    CommonEventPublishInfo publishInfo;
+    publishInfo.SetSubscriberMaximumVersion(version);
+    EXPECT_EQ(version, publishInfo.GetSubscriberMaximumVersion());
+
+    int32_t filterSettings = SUBSCRIBER_FILTER_VERSION;
+    EXPECT_EQ(filterSettings, publishInfo.GetFilterSettings());
+
+    version = DEFAULT_VERSION;
+    filterSettings = 0;
+    publishInfo.SetSubscriberMaximumVersion(version);
+    EXPECT_EQ(filterSettings, publishInfo.GetFilterSettings());
+}
+
+/*
  * @tc.number: CommonEventSubscriber_0102
  * @tc.name: verify IsStickyCommonEvent
  * @tc.desc: Invoke OnAddSystemAbility interface verify whether it is normal
