@@ -233,6 +233,9 @@ private:
  
     bool CheckSubscriberBySpecifiedType(const int32_t &specifiedSubscriberType, const bool &isSystemApp);
 
+    bool CheckSubscriberByMaximumVersion(const SubscriberRecordPtr &subscriberRecord,
+        const CommonEventRecord &eventRecord);
+
     void GetSubscriberRecordsByWantLocked(const CommonEventRecord &eventRecord,
         std::vector<SubscriberRecordPtr> &records);
 

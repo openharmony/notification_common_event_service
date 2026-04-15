@@ -786,6 +786,7 @@ ohos_unittest("common_event_subscriber_manager_test") {
     "common_event_subscriber_manager_test.cpp",
     "mock/mock_access_token_kit.cpp",
     "mock/mock_common_event_permission_manager.cpp",
+    "mock/mock_bundle_manager_helper.cpp",
     "mock/mock_token_id_kit.cpp",
   ]
 

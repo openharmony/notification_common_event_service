@@ -53,6 +53,21 @@ std::string BundleManagerHelper::GetBundleName(const uid_t uid)
     return bundleName;
 }
 
+bool BundleManagerHelper::GetApiTargetVersionByUid(const uid_t uid, int32_t &apiTargetVersion)
+{
+    EVENT_LOGD(LOG_TAG_CES, "enter");
+    std::lock_guard<ffrt::mutex> lock(mutex_);
+    if (!GetBundleMgrProxyAsync()) {
+        return false;
+    }
+    ErrCode result = sptrBundleMgr_->GetApiTargetVersionByUid(uid, apiTargetVersion);
+    if (result != ERR_OK) {
+        EVENT_LOGE(LOG_TAG_CES, "GetApiTargetVersionByUid failed result: %{public}d", result);
+        return false;
+    }
+    return true;
+}
+
 bool BundleManagerHelper::QueryExtensionInfos(std::vector<AppExecFwk::ExtensionAbilityInfo> &extensionInfos,
     const int32_t &userId)
 {

@@ -38,6 +38,7 @@ CommonEventPublishInfo::CommonEventPublishInfo(const CommonEventPublishInfo &com
     subscriberUids_ = commonEventPublishInfo.subscriberUids_;
     subscriberType_ = commonEventPublishInfo.subscriberType_;
     rule_ = commonEventPublishInfo.rule_;
+    maximumVersion_ = commonEventPublishInfo.maximumVersion_;
 }
 
 CommonEventPublishInfo::~CommonEventPublishInfo()
@@ -125,6 +126,16 @@ ValidationRule CommonEventPublishInfo::GetValidationRule() const
     return rule_;
 }
 
+void CommonEventPublishInfo::SetSubscriberMaximumVersion(const int32_t version)
+{
+    maximumVersion_ = version;
+}
+ 
+int32_t CommonEventPublishInfo::GetSubscriberMaximumVersion() const
+{
+    return maximumVersion_;
+}
+
 uint16_t CommonEventPublishInfo::GetFilterSettings() const
 {
     uint16_t filterSettings = 0;
@@ -139,6 +150,9 @@ uint16_t CommonEventPublishInfo::GetFilterSettings() const
     }
     if (!subscriberUids_.empty()) {
         filterSettings |= SUBSCRIBER_FILTER_SUBSCRIBER_UID_INDEX;
+    }
+    if (maximumVersion_ != DEFAULT_VERSION) {
+        filterSettings |= SUBSCRIBER_FILTER_VERSION;
     }
     return filterSettings;
 }
@@ -187,6 +201,11 @@ bool CommonEventPublishInfo::Marshalling(Parcel &parcel) const
     // write rule_
     if (!parcel.WriteInt32(static_cast<int32_t>(rule_))) {
         EVENT_LOGE(LOG_TAG_CES, "common event Publish Info write rule failed");
+        return false;
+    }
+    // write maximumVersion_
+    if (!parcel.WriteInt32(static_cast<int32_t>(maximumVersion_))) {
+        EVENT_LOGE(LOG_TAG_CES, "common event Publish Info write maximumVersion failed");
         return false;
     }
     return true;
@@ -238,6 +257,7 @@ bool CommonEventPublishInfo::ReadFromParcel(Parcel &parcel)
         return false;
     }
     rule_ = static_cast<ValidationRule>(rule);
+    maximumVersion_ = parcel.ReadInt32();
     return true;
 }
 
