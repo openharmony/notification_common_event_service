@@ -28,6 +28,8 @@ bool g_mockBundleName = false;
 int32_t g_mockUid = -1;
 bool g_mockIsSystemApp = false;
 constexpr int32_t MOCK_UID = 1000;
+int32_t g_mockVersion = -1;
+bool g_mockResult = true;
 }
 
 bool IsClearBundleManagerHelperCalled()
@@ -43,6 +45,12 @@ void SetBundleNameMock()
 void SetUidMock(int32_t uid)
 {
     g_mockUid = uid;
+}
+
+void SetTargetVersionByUidMock(int32_t version, bool result)
+{
+    g_mockVersion = version;
+    g_mockResult = result;
 }
 
 void SetSystemMock(bool mockRet)
@@ -299,6 +307,12 @@ bool BundleManagerHelper::GetApplicationInfos(const AppExecFwk::ApplicationFlag 
     appInfos = g_mockAppInfos;
     g_mockAppInfos.clear();
     return true;
+}
+
+bool BundleManagerHelper::GetApiTargetVersionByUid(const uid_t uid, int32_t &apiTargetVersion)
+{
+    apiTargetVersion = g_mockVersion;
+    return g_mockResult;
 }
 
 int32_t BundleManagerHelper::GetDefaultUidByBundleName(const std::string &bundle, const int32_t userId)
