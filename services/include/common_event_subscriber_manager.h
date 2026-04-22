@@ -266,6 +266,19 @@ private:
 
     void CompactSubscriberDataStructures();
 
+    std::map<pid_t, SubscriberRecordPtr> GetTopSubscriberRecordsMap(
+        const std::vector<std::pair<pid_t, uint32_t>> &topSubscriberCounts);
+    
+    std::string FormatTopSubscribersInfo(const std::map<pid_t, SubscriberRecordPtr> &topRecordsMap);
+
+    void ReportTopSubscribersInfoHiSysEvent(const std::map<pid_t, SubscriberRecordPtr> &topRecordsMap, pid_t killedPid);
+
+    std::string FormatEventsString(const std::vector<std::string>& events);
+
+    std::string GetFirstLine(const std::string& path);
+
+    std::string GetProcessNameFromProcCmdline(int32_t pid);
+
 private:
     ffrt::mutex mutex_;
     sptr<IRemoteObject::DeathRecipient> death_;
