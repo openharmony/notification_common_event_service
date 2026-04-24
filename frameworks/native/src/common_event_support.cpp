@@ -1494,6 +1494,7 @@ const std::string CommonEventSupport::COMMON_EVENT_SCREEN_UNLOCKED = "usual.even
 
 /**
  * Indicates the action of a common event that the time to exit from the lock screen.
+ * Public events do not concern whether the file system is decrypted.
  * This is a protected common event that can only be sent by system.
  */
 const std::string CommonEventSupport::COMMON_EVENT_SCREEN_LOCK_EXITING = "usual.event.SCREEN_LOCK_EXITING";
