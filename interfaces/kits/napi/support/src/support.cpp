@@ -663,7 +663,7 @@ napi_value SupportInit(napi_env env, napi_value exports)
     SetNamedPropertyByStr(env,
         obj,
         EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_LOCK_EXITING,
-        "usual.event.SCREEN_LOCK_EXITING");
+        "COMMON_EVENT_SCREEN_LOCK_EXITING");
     SetNamedPropertyByStr(env,
         obj,
         EventFwk::CommonEventSupport::COMMON_EVENT_AUDIO_QUALITY_CHANGE,
