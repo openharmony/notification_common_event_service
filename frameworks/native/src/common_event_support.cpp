@@ -3033,6 +3033,13 @@ void CommonEventSupport::Init()
     commonEventSupport_.emplace_back(COMMON_EVENT_SCREEN_UNLOCKED);
 
     /**
+    * Indicates the action of a common event that the time to exit from the lock screen.
+    * Public events do not concern whether the file system is decrypted.
+    * This is a protected common event that can only be sent by system.
+    */
+    commonEventSupport_.emplace_back(COMMON_EVENT_SCREEN_LOCK_EXITING);
+
+    /**
     * Indicates the action of a common event that the call audio quality information has been updated.
     * This is a protected common event that can only be sent by system.
     */
