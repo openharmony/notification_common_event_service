@@ -15,6 +15,8 @@
 #include "common_event_subscriber_manager.h"
 
 #include <csignal>
+#include <fstream>
+#include <sstream>
 #include <utility>
 #include <vector>
 #include <set>
@@ -296,6 +298,8 @@ __attribute__((no_sanitize("cfi"))) bool CommonEventSubscriberManager::InsertSub
         if (pid == killedPid) {
             return false;
         }
+        std::map<pid_t, SubscriberRecordPtr> topRecordsMap = GetTopSubscriberRecordsMap(vtSubscriberCounts);
+        ReportTopSubscribersInfoHiSysEvent(topRecordsMap, killedPid);
 
         AAFwk::ExitReason reason = { AAFwk::REASON_RESOURCE_CONTROL, "Kill Reason: CES Register exceed limit"};
         AAFwk::AbilityManagerClient::GetInstance()->RecordProcessExitReason(killedPid, reason);
@@ -1058,6 +1062,98 @@ void CommonEventSubscriberManager::PrintSubscriberCounts(std::vector<std::pair<p
     }
 }
 
+std::map<pid_t, SubscriberRecordPtr> CommonEventSubscriberManager::GetTopSubscriberRecordsMap(
+    const std::vector<std::pair<pid_t, uint32_t>> &topSubscriberCounts)
+{
+    std::map<pid_t, SubscriberRecordPtr> topRecordsMap;
+    if (topSubscriberCounts.empty()) {
+        return topRecordsMap;
+    }
+ 
+    for (const auto& [pid, count] : topSubscriberCounts) {
+        for (const auto& subscriber : subscribers_) {
+            if (subscriber != nullptr && subscriber->eventRecordInfo.pid == pid) {
+                topRecordsMap[pid] = subscriber;
+                break;
+            }
+        }
+    }
+ 
+    return topRecordsMap;
+}
+
+std::string CommonEventSubscriberManager::FormatEventsString(const std::vector<std::string>& events)
+{
+    std::ostringstream eventStream;
+    eventStream << "[";
+    for (size_t i = 0; i < events.size(); ++i) {
+        if (i > 0) {
+            eventStream << ", ";
+        }
+        eventStream << events[i];
+    }
+    eventStream << "]";
+    return eventStream.str();
+}
+
+std::string CommonEventSubscriberManager::FormatTopSubscribersInfo(
+    const std::map<pid_t, SubscriberRecordPtr> &topRecordsMap)
+{
+    if (topRecordsMap.empty()) {
+        return "";
+    }
+ 
+    std::ostringstream infoStream;
+    for (const auto& [pid, subscriber] : topRecordsMap) {
+        if (subscriber == nullptr) {
+            continue;
+        }
+ 
+        infoStream << "pid=" << subscriber->eventRecordInfo.pid
+                  << ", uid=" << subscriber->eventRecordInfo.uid
+                  << ", bundle_name=" << subscriber->eventRecordInfo.bundleName;
+ 
+        if (subscriber->eventSubscribeInfo != nullptr) {
+            std::vector<std::string> events = subscriber->eventSubscribeInfo->GetMatchingSkills().GetEvents();
+            infoStream << ", events=" << FormatEventsString(events);
+        }
+        infoStream << "\n";
+    }
+ 
+    return infoStream.str();
+}
+
+void CommonEventSubscriberManager::ReportTopSubscribersInfoHiSysEvent(
+    const std::map<pid_t, SubscriberRecordPtr>& topRecordsMap, pid_t killedPid)
+{
+    auto it = topRecordsMap.find(killedPid);
+    if (it == topRecordsMap.end()) {
+        EVENT_LOGE(LOG_TAG_SUBSCRIBER, "Cannot find subscriber record for killed pid=%{public}d", killedPid);
+        return;
+    }
+ 
+    SubscriberRecordPtr subscriber = it->second;
+    if (subscriber == nullptr) {
+        EVENT_LOGE(LOG_TAG_SUBSCRIBER, "Subscriber record is null for killed pid=%{public}d", killedPid);
+        return;
+    }
+ 
+    std::string processName = GetProcessNameFromProcCmdline(killedPid);
+    auto uid = subscriber->eventRecordInfo.uid;
+    std::string msg = FormatTopSubscribersInfo(topRecordsMap);
+ 
+    int result = HiSysEventWrite(HiviewDFX::HiSysEvent::Domain::FRAMEWORK, "CES_SUBSCRIBER_OVER_LIMIT",
+        HiviewDFX::HiSysEvent::EventType::FAULT,
+        "PID", killedPid,
+        "PROCESS_NAME", processName,
+        "UID", uid,
+        "MSG", msg,
+        "MODULE_NAME", subscriber->eventRecordInfo.bundleName);
+    EVENT_LOGW(LOG_TAG_SUBSCRIBER, "hisysevent write result=%{public}d, send[FRAMEWORK,CES_SUBSCRIBER_OVER_LIMIT], "
+        "PID=%{public}d, PROCESS_NAME=%{public}s, UID=%{public}d, MSG=%{public}s, MODULE_NAME=%{public}s",
+        result, killedPid, processName.c_str(), uid, msg.c_str(), subscriber->eventRecordInfo.bundleName.c_str());
+}
+
 void CommonEventSubscriberManager::CompactSubscriberDataStructures()
 {
     std::lock_guard<ffrt::mutex> lock(mutex_);
@@ -1103,5 +1199,56 @@ void CommonEventSubscriberManager::CompactSubscriberDataStructures()
     EVENT_LOGI(LOG_TAG_SUBSCRIBER, "Memory fragmentation optimization completed. Copied subscriber count: %{public}zu,"
         "elapsed time: %{public}lld ms", compactedSubscribers.size(), duration.count());
 }
+
+std::string CommonEventSubscriberManager::GetFirstLine(const std::string& path)
+{
+    char checkPath[PATH_MAX] = {0};
+    if (realpath(path.c_str(), checkPath) == nullptr) {
+        EVENT_LOGE(LOG_TAG_SUBSCRIBER, "canonicalize failed. path is %{public}s", path.c_str());
+        return "";
+    }
+ 
+    std::ifstream inFile(checkPath);
+    if (!inFile) {
+        return "";
+    }
+    std::string firstLine;
+    getline(inFile, firstLine);
+    inFile.close();
+    return firstLine;
+}
+
+std::string CommonEventSubscriberManager::GetProcessNameFromProcCmdline(int32_t pid)
+{
+    if (pid <= 0) {
+        EVENT_LOGE(LOG_TAG_SUBSCRIBER, "invalid pid=%{public}d", pid);
+        return "";
+    }
+ 
+    std::string pidStr = std::to_string(pid);
+    std::string procCmdlinePath = "/proc/" + pidStr + "/cmdline";
+    std::string procCmdlineContent = GetFirstLine(procCmdlinePath);
+    if (procCmdlineContent.empty()) {
+        EVENT_LOGE(LOG_TAG_SUBSCRIBER, "failed to read cmdline for pid=%{public}d", pid);
+        return "";
+    }
+ 
+    size_t procNameStartPos = 0;
+    size_t procNameEndPos = procCmdlineContent.size();
+    for (size_t i = 0; i < procCmdlineContent.size(); i++) {
+        if (procCmdlineContent[i] == '/') {
+            procNameStartPos = i + 1;
+        } else if (procCmdlineContent[i] == '\0') {
+            procNameEndPos = i;
+            break;
+        }
+    }
+    size_t endPos = procNameEndPos - procNameStartPos;
+    std::string processName = procCmdlineContent.substr(procNameStartPos, endPos);
+    EVENT_LOGD(
+        LOG_TAG_SUBSCRIBER, "get process name from cmdline, name=%{public}s pid=%{public}d", processName.c_str(), pid);
+    return processName;
+}
+
 }  // namespace EventFwk
 }  // namespace OHOS
