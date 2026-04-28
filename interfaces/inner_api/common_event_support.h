@@ -156,6 +156,11 @@ public:
      */
     static const std::string COMMON_EVENT_PACKAGE_ADDED;
     /**
+     * Indicates the action of a common event that an application's skill has changed.
+     * This common event can only be published by the system.
+     */
+    static const std::string COMMON_EVENT_SKILL_CHANGED;
+    /**
      * This commonEvent means when a new application package start to install on the device.
      * This is a protected common event that can only be sent by system.
     */
