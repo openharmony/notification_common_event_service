@@ -506,6 +506,7 @@ void CommonEventSubscriberManager::GetSubscriberRecordsByWantLocked(const Common
         SubscriberRecordPtr subscriberRecord = *it;
         auto subscriberUid = subscriberRecord->eventRecordInfo.uid;
         auto subscriberUserId = subscriberRecord->eventSubscribeInfo->GetUserId();
+        auto subscriberBundleName = subscriberRecord->eventRecordInfo.bundleName;
         if (subscriberRecord->eventSubscribeInfo == nullptr) {
             continue;
         }
@@ -527,7 +528,7 @@ void CommonEventSubscriberManager::GetSubscriberRecordsByWantLocked(const Common
         if (!CheckSubscriberWhetherMatched(subscriberRecord, eventRecord)) {
             continue;
         }
-        SubscribeScreenEventToBlackListApp(eventRecord, bundleName, subscriberUid, records, subscriberRecord);
+        SubscribeScreenEventToBlackListApp(eventRecord, subscriberBundleName, subscriberUid, records, subscriberRecord);
     }
 }
 
