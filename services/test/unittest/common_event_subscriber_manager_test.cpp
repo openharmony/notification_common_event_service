@@ -2196,5 +2196,393 @@ HWTEST_F(CommonEventSubscriberManagerTest, GetSubscriberRecords_Compact_0200, Le
 
     GTEST_LOG_(INFO) << "GetSubscriberRecords_Compact_0200 end";
 }
+
+HWTEST_F(CommonEventSubscriberManagerTest, GetTopSubscriberRecordsMap_0100, Level1)
+{
+    GTEST_LOG_(INFO) << "GetTopSubscriberRecordsMap_0100 start";
+    CommonEventSubscriberManager commonEventSubscriberManager;
+ 
+    std::vector<std::pair<pid_t, uint32_t>> topSubscriberCounts;
+    std::map<pid_t, SubscriberRecordPtr> result = commonEventSubscriberManager.GetTopSubscriberRecordsMap(
+        topSubscriberCounts);
+ 
+    EXPECT_EQ(true, result.empty());
+ 
+    GTEST_LOG_(INFO) << "GetTopSubscriberRecordsMap_0100 end";
+}
+
+HWTEST_F(CommonEventSubscriberManagerTest, GetTopSubscriberRecordsMap_0200, Level1)
+{
+    GTEST_LOG_(INFO) << "GetTopSubscriberRecordsMap_0200 start";
+    CommonEventSubscriberManager commonEventSubscriberManager;
+ 
+    MatchingSkills matchingSkills;
+    matchingSkills.AddEvent("event1");
+    matchingSkills.AddEvent("event2");
+    CommonEventSubscribeInfo subscribeInfo(matchingSkills);
+    std::shared_ptr<DreivedSubscriber> subscriber = std::make_shared<DreivedSubscriber>(subscribeInfo);
+    sptr<IRemoteObject> commonEventListener = new CommonEventListener(subscriber);
+ 
+    struct tm recordTime {0};
+    EventRecordInfo eventRecordInfo;
+    eventRecordInfo.pid = 1000;
+    eventRecordInfo.uid = 10000;
+    eventRecordInfo.bundleName = "bundle1";
+ 
+    commonEventSubscriberManager.InsertSubscriber(
+        std::make_shared<CommonEventSubscribeInfo>(subscribeInfo),
+        commonEventListener, recordTime, eventRecordInfo);
+ 
+    std::vector<std::pair<pid_t, uint32_t>> topSubscriberCounts;
+    topSubscriberCounts.emplace_back(1000, 1);
+    std::map<pid_t, SubscriberRecordPtr> result = commonEventSubscriberManager.GetTopSubscriberRecordsMap(
+        topSubscriberCounts);
+ 
+    EXPECT_EQ(false, result.empty());
+    EXPECT_EQ(1, result.size());
+    EXPECT_EQ(1000, result.begin()->first);
+ 
+    GTEST_LOG_(INFO) << "GetTopSubscriberRecordsMap_0200 end";
+}
+
+HWTEST_F(CommonEventSubscriberManagerTest, GetTopSubscriberRecordsMap_0300, Level1)
+{
+    GTEST_LOG_(INFO) << "GetTopSubscriberRecordsMap_0300 start";
+    CommonEventSubscriberManager commonEventSubscriberManager;
+ 
+    MatchingSkills matchingSkills;
+    matchingSkills.AddEvent("event1");
+    CommonEventSubscribeInfo subscribeInfo(matchingSkills);
+ 
+    struct tm recordTime {0};
+ 
+    EventRecordInfo eventRecordInfo1;
+    eventRecordInfo1.pid = 1000;
+    eventRecordInfo1.uid = 10000;
+    eventRecordInfo1.bundleName = "bundle1";
+    std::shared_ptr<DreivedSubscriber> subscriber1 = std::make_shared<DreivedSubscriber>(subscribeInfo);
+    sptr<IRemoteObject> commonEventListener1 = new CommonEventListener(subscriber1);
+    commonEventSubscriberManager.InsertSubscriber(
+        std::make_shared<CommonEventSubscribeInfo>(subscribeInfo),
+        commonEventListener1, recordTime, eventRecordInfo1);
+ 
+    EventRecordInfo eventRecordInfo2;
+    eventRecordInfo2.pid = 2000;
+    eventRecordInfo2.uid = 20000;
+    eventRecordInfo2.bundleName = "bundle2";
+    std::shared_ptr<DreivedSubscriber> subscriber2 = std::make_shared<DreivedSubscriber>(subscribeInfo);
+    sptr<IRemoteObject> commonEventListener2 = new CommonEventListener(subscriber2);
+    commonEventSubscriberManager.InsertSubscriber(
+        std::make_shared<CommonEventSubscribeInfo>(subscribeInfo),
+        commonEventListener2, recordTime, eventRecordInfo2);
+ 
+    std::vector<std::pair<pid_t, uint32_t>> topSubscriberCounts;
+    topSubscriberCounts.emplace_back(1000, 1);
+    topSubscriberCounts.emplace_back(2000, 1);
+    std::map<pid_t, SubscriberRecordPtr> result = commonEventSubscriberManager.GetTopSubscriberRecordsMap(
+        topSubscriberCounts);
+ 
+    EXPECT_EQ(false, result.empty());
+    EXPECT_EQ(2, result.size());
+ 
+    GTEST_LOG_(INFO) << "GetTopSubscriberRecordsMap_0300 end";
+}
+
+HWTEST_F(CommonEventSubscriberManagerTest, FormatTopSubscribersInfo_0100, Level1)
+{
+    GTEST_LOG_(INFO) << "FormatTopSubscribersInfo_0100 start";
+    CommonEventSubscriberManager commonEventSubscriberManager;
+ 
+    std::map<pid_t, SubscriberRecordPtr> topRecordsMap;
+    std::string result = commonEventSubscriberManager.FormatTopSubscribersInfo(topRecordsMap);
+ 
+    EXPECT_EQ(true, result.empty());
+ 
+    GTEST_LOG_(INFO) << "FormatTopSubscribersInfo_0100 end";
+}
+
+HWTEST_F(CommonEventSubscriberManagerTest, FormatTopSubscribersInfo_0200, Level1)
+{
+    GTEST_LOG_(INFO) << "FormatTopSubscribersInfo_0200 start";
+    CommonEventSubscriberManager commonEventSubscriberManager;
+ 
+    SubscriberRecordPtr record = std::make_shared<EventSubscriberRecord>();
+    record->eventRecordInfo.pid = 1000;
+    record->eventRecordInfo.uid = 10000;
+    record->eventRecordInfo.bundleName = "bundle1";
+ 
+    MatchingSkills matchingSkills;
+    matchingSkills.AddEvent("event1");
+    matchingSkills.AddEvent("event2");
+    record->eventSubscribeInfo = std::make_shared<CommonEventSubscribeInfo>(matchingSkills);
+ 
+    std::map<pid_t, SubscriberRecordPtr> topRecordsMap;
+    topRecordsMap[1000] = record;
+    std::string result = commonEventSubscriberManager.FormatTopSubscribersInfo(topRecordsMap);
+ 
+    EXPECT_EQ(false, result.empty());
+    EXPECT_NE(std::string::npos, result.find("pid=1000"));
+    EXPECT_NE(std::string::npos, result.find("uid=10000"));
+    EXPECT_NE(std::string::npos, result.find("bundle_name=bundle1"));
+    EXPECT_NE(std::string::npos, result.find("event1"));
+    EXPECT_NE(std::string::npos, result.find("event2"));
+ 
+    GTEST_LOG_(INFO) << "FormatTopSubscribersInfo_0200 end";
+}
+
+HWTEST_F(CommonEventSubscriberManagerTest, FormatTopSubscribersInfo_0300, Level1)
+{
+    GTEST_LOG_(INFO) << "FormatTopSubscribersInfo_0300 start";
+    CommonEventSubscriberManager commonEventSubscriberManager;
+ 
+    std::map<pid_t, SubscriberRecordPtr> topRecordsMap;
+    topRecordsMap[1000] = nullptr;
+    std::string result = commonEventSubscriberManager.FormatTopSubscribersInfo(topRecordsMap);
+ 
+    EXPECT_EQ(true, result.empty());
+ 
+    GTEST_LOG_(INFO) << "FormatTopSubscribersInfo_0300 end";
+}
+
+HWTEST_F(CommonEventSubscriberManagerTest, FormatTopSubscribersInfo_0400, Level1)
+{
+    GTEST_LOG_(INFO) << "FormatTopSubscribersInfo_0400 start";
+    CommonEventSubscriberManager commonEventSubscriberManager;
+ 
+    SubscriberRecordPtr record = std::make_shared<EventSubscriberRecord>();
+    record->eventRecordInfo.pid = 1000;
+    record->eventRecordInfo.uid = 10000;
+    record->eventRecordInfo.bundleName = "bundle1";
+    record->eventSubscribeInfo = nullptr;
+ 
+    std::map<pid_t, SubscriberRecordPtr> topRecordsMap;
+    topRecordsMap[1000] = record;
+    std::string result = commonEventSubscriberManager.FormatTopSubscribersInfo(topRecordsMap);
+ 
+    EXPECT_EQ(false, result.empty());
+    EXPECT_NE(std::string::npos, result.find("pid=1000"));
+    EXPECT_NE(std::string::npos, result.find("uid=10000"));
+    EXPECT_NE(std::string::npos, result.find("bundle_name=bundle1"));
+ 
+    GTEST_LOG_(INFO) << "FormatTopSubscribersInfo_0400 end";
+}
+
+HWTEST_F(CommonEventSubscriberManagerTest, ReportTopSubscribersInfoHiSysEvent_0100, Level1)
+{
+    GTEST_LOG_(INFO) << "ReportTopSubscribersInfoHiSysEvent_0100 start";
+    CommonEventSubscriberManager commonEventSubscriberManager;
+ 
+    std::map<pid_t, SubscriberRecordPtr> topRecordsMap;
+    pid_t killedPid = 1000;
+ 
+    commonEventSubscriberManager.ReportTopSubscribersInfoHiSysEvent(topRecordsMap, killedPid);
+ 
+    GTEST_LOG_(INFO) << "ReportTopSubscribersInfoHiSysEvent_0100 end";
+}
+
+HWTEST_F(CommonEventSubscriberManagerTest, ReportTopSubscribersInfoHiSysEvent_0200, Level1)
+{
+    GTEST_LOG_(INFO) << "ReportTopSubscribersInfoHiSysEvent_0200 start";
+    CommonEventSubscriberManager commonEventSubscriberManager;
+ 
+    SubscriberRecordPtr record = std::make_shared<EventSubscriberRecord>();
+    record->eventRecordInfo.pid = 2000;
+    record->eventRecordInfo.uid = 20000;
+    record->eventRecordInfo.bundleName = "bundle2";
+ 
+    std::map<pid_t, SubscriberRecordPtr> topRecordsMap;
+    topRecordsMap[2000] = record;
+    pid_t killedPid = 1000;
+ 
+    commonEventSubscriberManager.ReportTopSubscribersInfoHiSysEvent(topRecordsMap, killedPid);
+ 
+    GTEST_LOG_(INFO) << "ReportTopSubscribersInfoHiSysEvent_0200 end";
+}
+
+HWTEST_F(CommonEventSubscriberManagerTest, ReportTopSubscribersInfoHiSysEvent_0300, Level1)
+{
+    GTEST_LOG_(INFO) << "ReportTopSubscribersInfoHiSysEvent_0300 start";
+    CommonEventSubscriberManager commonEventSubscriberManager;
+ 
+    std::map<pid_t, SubscriberRecordPtr> topRecordsMap;
+    topRecordsMap[1000] = nullptr;
+    pid_t killedPid = 1000;
+ 
+    commonEventSubscriberManager.ReportTopSubscribersInfoHiSysEvent(topRecordsMap, killedPid);
+ 
+    GTEST_LOG_(INFO) << "ReportTopSubscribersInfoHiSysEvent_0300 end";
+}
+
+HWTEST_F(CommonEventSubscriberManagerTest, ReportTopSubscribersInfoHiSysEvent_0400, Level1)
+{
+    GTEST_LOG_(INFO) << "ReportTopSubscribersInfoHiSysEvent_0400 start";
+    CommonEventSubscriberManager commonEventSubscriberManager;
+ 
+    SubscriberRecordPtr record = std::make_shared<EventSubscriberRecord>();
+    record->eventRecordInfo.pid = 1000;
+    record->eventRecordInfo.uid = 10000;
+    record->eventRecordInfo.bundleName = "bundle1";
+ 
+    MatchingSkills matchingSkills;
+    matchingSkills.AddEvent("event1");
+    record->eventSubscribeInfo = std::make_shared<CommonEventSubscribeInfo>(matchingSkills);
+ 
+    std::map<pid_t, SubscriberRecordPtr> topRecordsMap;
+    topRecordsMap[1000] = record;
+    pid_t killedPid = 1000;
+ 
+    commonEventSubscriberManager.ReportTopSubscribersInfoHiSysEvent(topRecordsMap, killedPid);
+ 
+    GTEST_LOG_(INFO) << "ReportTopSubscribersInfoHiSysEvent_0400 end";
+}
+
+HWTEST_F(CommonEventSubscriberManagerTest, ReportTopSubscribersInfoHiSysEvent_0500, Level1)
+{
+    GTEST_LOG_(INFO) << "ReportTopSubscribersInfoHiSysEvent_0500 start";
+    CommonEventSubscriberManager commonEventSubscriberManager;
+ 
+    MatchingSkills matchingSkills;
+    matchingSkills.AddEvent("event1");
+ 
+    SubscriberRecordPtr record1 = std::make_shared<EventSubscriberRecord>();
+    record1->eventRecordInfo.pid = 1000;
+    record1->eventRecordInfo.uid = 10000;
+    record1->eventRecordInfo.bundleName = "bundle1";
+    record1->eventSubscribeInfo = std::make_shared<CommonEventSubscribeInfo>(matchingSkills);
+ 
+    SubscriberRecordPtr record2 = std::make_shared<EventSubscriberRecord>();
+    record2->eventRecordInfo.pid = 2000;
+    record2->eventRecordInfo.uid = 20000;
+    record2->eventRecordInfo.bundleName = "bundle2";
+    record2->eventSubscribeInfo = std::make_shared<CommonEventSubscribeInfo>(matchingSkills);
+ 
+    std::map<pid_t, SubscriberRecordPtr> topRecordsMap;
+    topRecordsMap[1000] = record1;
+    topRecordsMap[2000] = record2;
+    pid_t killedPid = 1000;
+ 
+    commonEventSubscriberManager.ReportTopSubscribersInfoHiSysEvent(topRecordsMap, killedPid);
+ 
+    GTEST_LOG_(INFO) << "ReportTopSubscribersInfoHiSysEvent_0500 end";
+}
+
+HWTEST_F(CommonEventSubscriberManagerTest, FormatEventsString_0100, Level1)
+{
+    GTEST_LOG_(INFO) << "FormatEventsString_0100 start";
+    CommonEventSubscriberManager commonEventSubscriberManager;
+ 
+    std::vector<std::string> events;
+    std::string result = commonEventSubscriberManager.FormatEventsString(events);
+ 
+    EXPECT_EQ("[]", result);
+ 
+    GTEST_LOG_(INFO) << "FormatEventsString_0100 end";
+}
+
+HWTEST_F(CommonEventSubscriberManagerTest, FormatEventsString_0200, Level1)
+{
+    GTEST_LOG_(INFO) << "FormatEventsString_0200 start";
+    CommonEventSubscriberManager commonEventSubscriberManager;
+ 
+    std::vector<std::string> events;
+    events.emplace_back("event1");
+    std::string result = commonEventSubscriberManager.FormatEventsString(events);
+ 
+    EXPECT_EQ("[event1]", result);
+ 
+    GTEST_LOG_(INFO) << "FormatEventsString_0200 end";
+}
+
+HWTEST_F(CommonEventSubscriberManagerTest, FormatEventsString_0300, Level1)
+{
+    GTEST_LOG_(INFO) << "FormatEventsString_0300 start";
+    CommonEventSubscriberManager commonEventSubscriberManager;
+ 
+    std::vector<std::string> events;
+    events.emplace_back("event1");
+    events.emplace_back("event2");
+    events.emplace_back("event3");
+    std::string result = commonEventSubscriberManager.FormatEventsString(events);
+ 
+    EXPECT_EQ("[event1, event2, event3]", result);
+ 
+    GTEST_LOG_(INFO) << "FormatEventsString_0300 end";
+}
+
+HWTEST_F(CommonEventSubscriberManagerTest, FormatEventsString_0400, Level1)
+{
+    GTEST_LOG_(INFO) << "FormatEventsString_0400 start";
+    CommonEventSubscriberManager commonEventSubscriberManager;
+ 
+    std::vector<std::string> events;
+    events.emplace_back("usual.event.SCREEN_ON");
+    events.emplace_back("usual.event.SCREEN_OFF");
+    std::string result = commonEventSubscriberManager.FormatEventsString(events);
+ 
+    EXPECT_EQ("[usual.event.SCREEN_ON, usual.event.SCREEN_OFF]", result);
+ 
+    GTEST_LOG_(INFO) << "FormatEventsString_0400 end";
+}
+
+HWTEST_F(CommonEventSubscriberManagerTest, GetFirstLine_0100, Level1)
+{
+    GTEST_LOG_(INFO) << "GetFirstLine_0100 start";
+    CommonEventSubscriberManager commonEventSubscriberManager;
+ 
+    std::string result = commonEventSubscriberManager.GetFirstLine("/proc/self/cmdline");
+ 
+    EXPECT_FALSE(result.empty());
+ 
+    GTEST_LOG_(INFO) << "GetFirstLine_0100 end";
+}
+
+HWTEST_F(CommonEventSubscriberManagerTest, GetFirstLine_0200, Level1)
+{
+    GTEST_LOG_(INFO) << "GetFirstLine_0200 start";
+    CommonEventSubscriberManager commonEventSubscriberManager;
+ 
+    std::string result = commonEventSubscriberManager.GetFirstLine("/proc/invalid/path/file");
+ 
+    EXPECT_TRUE(result.empty());
+ 
+    GTEST_LOG_(INFO) << "GetFirstLine_0200 end";
+}
+
+HWTEST_F(CommonEventSubscriberManagerTest, GetProcessNameFromProcCmdline_0100, Level1)
+{
+    GTEST_LOG_(INFO) << "GetProcessNameFromProcCmdline_0100 start";
+    CommonEventSubscriberManager commonEventSubscriberManager;
+ 
+    pid_t pid = getpid();
+    std::string result = commonEventSubscriberManager.GetProcessNameFromProcCmdline(pid);
+ 
+    EXPECT_FALSE(result.empty());
+ 
+    GTEST_LOG_(INFO) << "GetProcessNameFromProcCmdline_0100 end";
+}
+
+HWTEST_F(CommonEventSubscriberManagerTest, GetProcessNameFromProcCmdline_0200, Level1)
+{
+    GTEST_LOG_(INFO) << "GetProcessNameFromProcCmdline_0200 start";
+    CommonEventSubscriberManager commonEventSubscriberManager;
+ 
+    std::string result = commonEventSubscriberManager.GetProcessNameFromProcCmdline(-1);
+ 
+    EXPECT_TRUE(result.empty());
+ 
+    GTEST_LOG_(INFO) << "GetProcessNameFromProcCmdline_0200 end";
+}
+
+HWTEST_F(CommonEventSubscriberManagerTest, GetProcessNameFromProcCmdline_0300, Level1)
+{
+    GTEST_LOG_(INFO) << "GetProcessNameFromProcCmdline_0300 start";
+    CommonEventSubscriberManager commonEventSubscriberManager;
+ 
+    std::string result = commonEventSubscriberManager.GetProcessNameFromProcCmdline(999999);
+ 
+    EXPECT_TRUE(result.empty());
+ 
+    GTEST_LOG_(INFO) << "GetProcessNameFromProcCmdline_0300 end";
+}
 }
 }
