@@ -252,7 +252,10 @@ int32_t UnsubscribeAndRemoveInstance(ani_env* env, const std::shared_ptr<Subscri
     if (item != subscriberInstances.end()) {
         ani_ref callbackRef = static_cast<ani_ref>(item->first->GetCallback());
         if (callbackRef != nullptr) {
-            env->GlobalReference_Delete(callbackRef);
+            ani_status status = env->GlobalReference_Delete(callbackRef);
+            if (status != ANI_OK) {
+                EVENT_LOGE(LOG_TAG_CES_ANI, "GlobalReference_Delete failed: %{public}d", status);
+            }
             item->first->SetCallback(nullptr);
         }
         subscriberInstances.erase(item);
@@ -517,7 +520,11 @@ std::shared_ptr<SubscriberInstanceRelationship> GetTransferRelation(std::shared_
 static ani_ref transferToStaticSubscriber(ani_env *env, [[maybe_unused]] ani_class, ani_object input)
 {
     ani_ref undefinedRef {};
-    env->GetUndefined(&undefinedRef);
+    ani_status status = env->GetUndefined(&undefinedRef);
+    if (status != ANI_OK) {
+        EVENT_LOGE(LOG_TAG_CES_ANI, "GetUndefined failed: %{public}d", status);
+        return nullptr;
+    }
     EventManagerFwkNapi::SubscriberInstanceWrapper *wrapper = nullptr;
     arkts_esvalue_unwrap(env, input, (void **)&wrapper);
     if (wrapper == nullptr) {
@@ -585,7 +592,10 @@ static int32_t unsubscribeCallback(const std::shared_ptr<EventManagerFwkNapi::Su
             return aniResult;
         }
         result = UnsubscribeAndRemoveInstance(etsEnv, relation->aniSubscriber_);
-        relation->aniSubscriber_->GetVm()->DetachCurrentThread();
+        ani_status status = relation->aniSubscriber_->GetVm()->DetachCurrentThread();
+        if (status != ANI_OK) {
+            EVENT_LOGE(LOG_TAG_CES_ANI, "DetachCurrentThread failed: %{public}d", status);
+        }
         relation->aniSubscriber_ = nullptr;
     }
     return result;
@@ -641,7 +651,10 @@ static int32_t gcCallback(const std::shared_ptr<EventManagerFwkNapi::SubscriberI
                     return aniResult;
                 }
                 result = UnsubscribeAndRemoveInstance(etsEnv, relation->aniSubscriber_);
-                relation->aniSubscriber_->GetVm()->DetachCurrentThread();
+                ani_status status = relation->aniSubscriber_->GetVm()->DetachCurrentThread();
+                if (status != ANI_OK) {
+                    EVENT_LOGE(LOG_TAG_CES_ANI, "DetachCurrentThread failed: %{public}d", status);
+                }
                 relation->aniSubscriber_ = nullptr;
             }
             allDestroyed = true;
@@ -679,7 +692,11 @@ static void asyncResultCloneCallback(const std::shared_ptr<EventManagerFwkNapi::
 static ani_ref transferToDynamicSubscriber(ani_env *env, [[maybe_unused]] ani_class, ani_object input)
 {
     ani_ref undefinedRef {};
-    env->GetUndefined(&undefinedRef);
+    ani_status status = env->GetUndefined(&undefinedRef);
+    if (status != ANI_OK) {
+        EVENT_LOGE(LOG_TAG_CES_ANI, "GetUndefined failed: %{public}d", status);
+        return nullptr;
+    }
     napi_env jsEnv;
     arkts_napi_scope_open(env, &jsEnv);
     auto aniSubscriber = GetSubscriber(env, static_cast<ani_ref>(input));
