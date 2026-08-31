@@ -14,6 +14,7 @@
  */
 
 #include "common_event_command.h"
+#include "parse_cmd_int32.h"
 
 #include <getopt.h>
 
@@ -120,13 +121,21 @@ void CommonEventCommand::SetPublishCmdInfo(PublishCmdInfo &cmdInfo, ErrCode &res
                 cmdInfo.isOrdered = true;
                 break;
             case 'c':
-                cmdInfo.code = atoi(optarg);
+                if (!ParseCmdInt32(optarg, cmdInfo.code)) {
+                    resultReceiver_.append("error: option 'c' requires a valid integer.\n");
+                    result = ERR_INVALID_VALUE;
+                    return;
+                }
                 break;
             case 'd':
                 cmdInfo.data = optarg;
                 break;
             case 'u':
-                cmdInfo.userId = atoi(optarg);
+                if (!ParseCmdInt32(optarg, cmdInfo.userId)) {
+                    resultReceiver_.append("error: option 'u' requires a valid integer.\n");
+                    result = ERR_INVALID_VALUE;
+                    return;
+                }
                 break;
             default:
                 break;
@@ -215,7 +224,11 @@ void CommonEventCommand::SetDumpCmdInfo(DumpCmdInfo &cmdInfo, ErrCode &result, b
                 cmdInfo.action = optarg;
                 break;
             case 'u':
-                cmdInfo.userId = atoi(optarg);
+                if (!ParseCmdInt32(optarg, cmdInfo.userId)) {
+                    resultReceiver_.append("error: option 'u' requires a valid integer.\n");
+                    result = ERR_INVALID_VALUE;
+                    return;
+                }
                 break;
             case 'p':
                 CheckDumpEventType(cmdInfo, result);
